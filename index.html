@@ -1078,7 +1078,7 @@ const PERMANENT_TAGS = ['Q1 Peak', 'Q3 Peak'];
 let config  = {tags:[], owners:[...DEFAULT_OWNERS], customChannels:[]};
 let mode    = 'campaign';
 let zoom    = 'month';
-let viewStart = new Date(new Date().getFullYear(), 0, 1); // used for month/quarter/day
+let viewStart = new Date(2026, 0, 1); // used for month/quarter/day
 // For week zoom, viewStart is recalculated from today in getCols — so this is fine
 let weekShift = 0; // number of weeks shifted from today's default window
 let undoStack = null; // {type:'add'|'edit'|'delete'|'settings', ...data}
