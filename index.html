@@ -488,6 +488,7 @@ textarea.ef-input{resize:vertical;min-height:48px}
       <span class="ctrl-label">View by</span>
       <button class="mtab on" id="tab-campaign" onclick="setMode('campaign')">Campaign</button>
       <button class="mtab" id="tab-group" onclick="setMode('group')">Category</button>
+      <button class="mtab" id="tab-briefs" onclick="setMode('briefs')">📋 Briefs</button>
     </div>
     <div class="ctrl-section">
       <span class="ctrl-label">Zoom</span>
@@ -627,6 +628,24 @@ textarea.ef-input{resize:vertical;min-height:48px}
             <label>Change Description</label>
             <input type="text" id="f-price-change-desc" placeholder="e.g. Price increase: £4.49 → £4.99/serving">
           </div>
+        </div>
+      </div>
+    </div>
+    <!-- Brief dates panel -->
+    <div style="margin-top:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:14px">
+      <div style="font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:800;margin-bottom:10px;display:flex;align-items:center;gap:7px;color:#9FBBA0">📋 Brief Milestones <span style="font-weight:400;font-size:9px;opacity:.6">(optional)</span></div>
+      <div class="fg-row c3">
+        <div class="fg">
+          <label>🟣 Brief Due</label>
+          <div class="date-wrap"><input type="date" id="f-brief-due"><span class="date-icon">📅</span></div>
+        </div>
+        <div class="fg">
+          <label>🟠 Feedback Due</label>
+          <div class="date-wrap"><input type="date" id="f-feedback-due"><span class="date-icon">📅</span></div>
+        </div>
+        <div class="fg">
+          <label>🟢 Artwork Delivery</label>
+          <div class="date-wrap"><input type="date" id="f-artwork-due"><span class="date-icon">📅</span></div>
         </div>
       </div>
     </div>
@@ -1004,6 +1023,25 @@ textarea.ef-input{resize:vertical;min-height:48px}
         <textarea class="ef-input" id="ef-notes" rows="2"></textarea>
       </div>
 
+      <!-- Brief milestones -->
+      <div style="background:var(--paper);border-radius:8px;padding:10px 12px;border:1px solid var(--line)">
+        <div style="font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);font-weight:700;margin-bottom:8px">📋 Brief Milestones</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+          <div class="ef-row">
+            <div class="ef-label" style="color:#7B5EA7">🟣 Brief Due</div>
+            <div class="date-wrap"><input class="ef-input" id="ef-brief-due" type="date"><span class="date-icon">📅</span></div>
+          </div>
+          <div class="ef-row">
+            <div class="ef-label" style="color:#DF9A2E">🟠 Feedback Due</div>
+            <div class="date-wrap"><input class="ef-input" id="ef-feedback-due" type="date"><span class="date-icon">📅</span></div>
+          </div>
+          <div class="ef-row">
+            <div class="ef-label" style="color:#067A46">🟢 Artwork Delivery</div>
+            <div class="date-wrap"><input class="ef-input" id="ef-artwork-due" type="date"><span class="date-icon">📅</span></div>
+          </div>
+        </div>
+      </div>
+
       <!-- Conditional: Discount -->
       <div class="ef-cond" id="ef-panel-discount" style="display:none">
         <div class="ef-label" style="color:var(--discount-text);margin-bottom:4px">🏷 Discount Detail</div>
@@ -1078,7 +1116,7 @@ const PERMANENT_TAGS = ['Q1 Peak', 'Q3 Peak'];
 let config  = {tags:[], owners:[...DEFAULT_OWNERS], customChannels:[]};
 let mode    = 'campaign';
 let zoom    = 'month';
-let viewStart = new Date(2026, 0, 1); // used for month/quarter/day
+let viewStart = new Date(new Date().getFullYear(), 0, 1); // used for month/quarter/day
 // For week zoom, viewStart is recalculated from today in getCols — so this is fine
 let weekShift = 0; // number of weeks shifted from today's default window
 let undoStack = null; // {type:'add'|'edit'|'delete'|'settings', ...data}
@@ -1093,7 +1131,7 @@ let formFins   = new Set();
 // GOOGLE SHEETS CONFIG
 // ══════════════════════════════════════════════
 // ⚠️ PASTE YOUR APPS SCRIPT URL HERE after deploying (Step 4 of setup guide)
-const GS_URL = 'https://script.google.com/macros/s/AKfycbyYWvZonjTNxFSBOhTUmenzs8ZOCxpPuezA0k1YRwdI-z-wePNJAo2tsJnzfV2_FnlBGg/exec';
+const GS_URL = 'https://script.google.com/macros/s/AKfycbzKqu3mQSAq1pT-h0Fo4uX-i7thm3wZ04ty1Z_yBt__HlxBvh2aRwFaURnnrKHS1lqFiA/exec';
 
 // ── Setup check ───────────────────────────────
 if(GS_URL === 'YOUR_APPS_SCRIPT_URL_HERE'){
@@ -1148,6 +1186,9 @@ function gsRecordToEvent(rec){
     priceChangeDate: rec['Price Change Date']||'',
     priceChangeDesc: rec['Price Change Desc']||'',
     isTest: rec['Is Test']===true||rec['Is Test']==='TRUE',
+    briefDue: rec['Brief Due']||'',
+    feedbackDue: rec['Feedback Due']||'',
+    artworkDue: rec['Artwork Due']||'',
   };
 }
 
@@ -1169,6 +1210,9 @@ function eventToGsRecord(ev){
     'Price Change Date': ev.priceChangeDate||'',
     'Price Change Desc': ev.priceChangeDesc||'',
     'Is Test': !!ev.isTest,
+    'Brief Due': ev.briefDue||'',
+    'Feedback Due': ev.feedbackDue||'',
+    'Artwork Due': ev.artworkDue||'',
   };
 }
 
@@ -1657,7 +1701,7 @@ function render(){
       </div>`;
   }
 
-  const bodyHtml=mode==='group' ? renderGroupMode(evs,cols,cw,LW,tw) : renderCampaignMode(evs,cols,cw,LW,tw);
+  const bodyHtml=mode==='group' ? renderGroupMode(evs,cols,cw,LW,tw) : mode==='briefs' ? renderBriefsMode(evs,cols,cw,LW,tw) : renderCampaignMode(evs,cols,cw,LW,tw);
 
   body.innerHTML=`<div style="display:flex;flex-direction:column;min-width:${LW+tw}px">${headerHtml}<div>${bodyHtml}</div></div>`;
 
@@ -1991,6 +2035,92 @@ function renderCampaignMode(evs,cols,cw,LW,twidth){
   return html;
 }
 
+// ── BRIEFS MODE ───────────────────────────────
+function briefMilestoneFlagRow(ev, cols, cw, LW, twidth) {
+  const g = GROUPS[ev.group] || GROUPS['brand'];
+  const milestones = [
+    { key: 'briefDue',    label: 'Brief Due',        color: '#7B5EA7', bg: '#EDE8F5', emoji: '🟣' },
+    { key: 'feedbackDue', label: 'Feedback Due',      color: '#DF9A2E', bg: '#FBF0DA', emoji: '🟠' },
+    { key: 'artworkDue',  label: 'Artwork Delivery',  color: '#067A46', bg: '#E0F2EA', emoji: '🟢' },
+  ];
+
+  const MSTONE_H = 16;
+  const MSTONE_GAP = 2;
+  const PAD = 4;
+  const rowH = PAD + milestones.length * (MSTONE_H + MSTONE_GAP) + PAD;
+
+  let bars = '';
+  milestones.forEach((m, slot) => {
+    const dateStr = ev[m.key];
+    const top = PAD + slot * (MSTONE_H + MSTONE_GAP);
+    if (dateStr) {
+      const x = dateToX(dateStr, cols, cw);
+      const isPast = pd(dateStr) < new Date(new Date().setHours(0,0,0,0));
+      const opacity = isPast ? 0.45 : 1;
+      // Flag bar: 80px wide from the date point
+      const flagW = Math.min(80, cols.length * cw - x - 2);
+      if (flagW > 4) {
+        bars += `<div style="position:absolute;left:${x}px;top:${top}px;width:2px;height:${MSTONE_H}px;background:${m.color};opacity:${opacity};z-index:3"></div>`;
+        bars += `<div style="position:absolute;left:${x+2}px;top:${top}px;width:${flagW}px;height:${MSTONE_H}px;background:${m.bg};border:1px solid ${m.color};border-radius:0 3px 3px 0;display:flex;align-items:center;padding:0 5px;font-size:9px;font-weight:700;color:${m.color};white-space:nowrap;overflow:hidden;opacity:${opacity};cursor:pointer;z-index:2" data-evid="${ev.id}">${m.emoji} ${fmtFull(dateStr)}</div>`;
+      }
+    } else {
+      // Faint placeholder
+      bars += `<div style="position:absolute;left:4px;top:${top}px;height:${MSTONE_H}px;display:flex;align-items:center;font-family:var(--mono);font-size:9px;color:rgba(0,0,0,.2);font-style:italic">${m.emoji} ${m.label} not set</div>`;
+    }
+  });
+
+  const dot = `<span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:${g.col};margin-right:5px;flex-shrink:0"></span>`;
+  const catBadge = `<span style="font-family:var(--mono);font-size:9px;font-weight:800;background:${g.bg};color:${g.text};border-radius:3px;padding:1px 5px;margin-left:5px;flex-shrink:0">${g.label.replace(/^\S+\s/,'')}</span>`;
+
+  return `<div style="display:flex;align-items:stretch;height:${rowH}px;background:#fff;border-bottom:1px solid var(--line)">
+    <div style="position:sticky;left:0;z-index:6;background:#fff;width:${LW}px;min-width:${LW}px;display:flex;align-items:center;padding:0 6px 0 12px;border-right:2px solid var(--line);overflow:hidden;flex-shrink:0">
+      ${dot}<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;color:var(--ink-soft);min-width:0;flex:1">${ev.name}</span>${catBadge}
+    </div>
+    <div style="position:relative;flex:1;min-width:${twidth}px;height:${rowH}px;overflow:hidden">
+      ${todayStrip(cols,cw,rowH)}${bars}
+    </div>
+  </div>`;
+}
+
+function renderBriefsMode(evs, cols, cw, LW, twidth) {
+  // Group by category like group mode
+  let html = '';
+  // Header legend
+  html += `<div style="display:flex;align-items:stretch;background:#F7FAF5;border-bottom:1px solid var(--line);min-height:26px">
+    <div style="position:sticky;left:0;z-index:7;background:#F7FAF5;width:${LW}px;min-width:${LW}px;display:flex;align-items:center;padding:0 12px;border-right:2px solid var(--line);flex-shrink:0">
+      <span style="font-family:var(--mono);font-size:9px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft)">📋 Brief Milestones</span>
+    </div>
+    <div style="flex:1;min-width:${twidth}px;display:flex;align-items:center;padding:0 10px;gap:18px">
+      <span style="font-family:var(--mono);font-size:9px;font-weight:700;color:#7B5EA7">🟣 Brief Due</span>
+      <span style="font-family:var(--mono);font-size:9px;font-weight:700;color:#DF9A2E">🟠 Feedback Due</span>
+      <span style="font-family:var(--mono);font-size:9px;font-weight:700;color:#067A46">🟢 Artwork Delivery</span>
+      <span style="font-family:var(--mono);font-size:9px;color:var(--ink-soft);margin-left:auto">Click any activity bar to edit milestone dates</span>
+    </div>
+  </div>`;
+
+  GROUP_KEYS.forEach(grp => {
+    if (!catFilters.has('all') && !catFilters.has(grp)) return;
+    const g = GROUPS[grp];
+    const grpEvs = evs.filter(e => e.group === grp);
+    if (!grpEvs.length) return;
+    const isCol = collapsed['briefs_g_' + grp] === true;
+    html += secDivRow(`briefs_g_${grp}`, isCol,
+      `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${g.col};flex-shrink:0;margin-right:4px"></span>${g.label}`,
+      g.bg, g.text, LW, twidth);
+    if (!isCol) {
+      const sorted = [...grpEvs].sort((a,b) => (a.start||'').localeCompare(b.start||''));
+      sorted.forEach(ev => {
+        html += briefMilestoneFlagRow(ev, cols, cw, LW, twidth);
+      });
+    }
+  });
+
+  if (!html.includes('data-evid')) {
+    html += emptyDivRow(twidth, LW, 'No activities — add some using the form above');
+  }
+  return html;
+}
+
 // Legacy stubs — kept so existing callers don't break
 function secRow(key,isCol,labelHtml,bg,textCol,cols,LW){ return ''; }
 function subRow(key,isCol,label,cols,LW){ return ''; }
@@ -2078,9 +2208,10 @@ function setZoom(z){
 }
 function setMode(m){
   mode=m;
-  collapsed={}; // reset collapsed state on mode switch
+  collapsed={};
   document.getElementById('tab-group').classList.toggle('on',m==='group');
   document.getElementById('tab-campaign').classList.toggle('on',m==='campaign');
+  document.getElementById('tab-briefs').classList.toggle('on',m==='briefs');
   scrollOnNextRender=true; render();
 }
 
@@ -2158,7 +2289,10 @@ function submitEvent(){
   if(start>end){ err.textContent='⚠ End must be on or after Start'; return; }
   if(isPriceChange&&!priceChangeDate){ err.textContent='⚠ Please enter the price change date'; return; }
   err.textContent='';
-  const ev={id:uid(),name,group,channel,start,end,fins:[...formFins],tags:[...formTags],owner,notes,discountNotes,pricingNotes,isPriceChange,priceChangeDate,priceChangeDesc,isTest};
+  const briefDue=document.getElementById('f-brief-due').value;
+  const feedbackDue=document.getElementById('f-feedback-due').value;
+  const artworkDue=document.getElementById('f-artwork-due').value;
+  const ev={id:uid(),name,group,channel,start,end,fins:[...formFins],tags:[...formTags],owner,notes,discountNotes,pricingNotes,isPriceChange,priceChangeDate,priceChangeDesc,isTest,briefDue,feedbackDue,artworkDue};
   events.push(ev);
   setUndo({type:'add',id:ev.id});
   saveEv_at(ev, null).catch(e=>showAtError('Save failed: '+e.message));
@@ -2167,7 +2301,7 @@ function submitEvent(){
 }
 
 function resetForm(){
-  ['f-name','f-notes','f-discount-notes','f-pricing-notes','f-price-change-date','f-price-change-desc','f-tag-new-inline'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  ['f-name','f-notes','f-discount-notes','f-pricing-notes','f-price-change-date','f-price-change-desc','f-tag-new-inline','f-brief-due','f-feedback-due','f-artwork-due'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
   document.getElementById('f-group').selectedIndex=0;
   document.getElementById('f-channel').innerHTML='<option value="">All / N/A</option>';
   document.getElementById('f-owner').value='';
@@ -2324,6 +2458,9 @@ function showPopup(id){
   document.getElementById('ef-price-change-fields').style.display=ev.isPriceChange?'block':'none';
   ipc.onchange=()=>{ document.getElementById('ef-price-change-fields').style.display=ipc.checked?'block':'none'; };
   document.getElementById('ef-is-test').checked=!!ev.isTest;
+  document.getElementById('ef-brief-due').value=ev.briefDue||'';
+  document.getElementById('ef-feedback-due').value=ev.feedbackDue||'';
+  document.getElementById('ef-artwork-due').value=ev.artworkDue||'';
 
   // Fin opts
   document.querySelectorAll('#ef-fin-multi .fin-opt').forEach(b=>{
@@ -2396,6 +2533,9 @@ function saveEdit(){
   ev.isTest=document.getElementById('ef-is-test').checked;
   ev.priceChangeDate=document.getElementById('ef-price-change-date').value;
   ev.priceChangeDesc=document.getElementById('ef-price-change-desc').value.trim();
+  ev.briefDue=document.getElementById('ef-brief-due').value;
+  ev.feedbackDue=document.getElementById('ef-feedback-due').value;
+  ev.artworkDue=document.getElementById('ef-artwork-due').value;
   saveEv_at(ev, ev.id).catch(e=>showAtError('Save failed: '+e.message));
   showChangeNotif("✓ Changes saved — visible to others within 60s");
   preserveScroll(); closePopup(); render();
@@ -2584,6 +2724,9 @@ function duplicateActivity(){
   document.getElementById('f-price-change-date').value=ev.priceChangeDate||'';
   document.getElementById('f-price-change-desc').value=ev.priceChangeDesc||'';
   document.getElementById('f-is-test').checked=!!ev.isTest;
+  document.getElementById('f-brief-due').value=ev.briefDue||'';
+  document.getElementById('f-feedback-due').value=ev.feedbackDue||'';
+  document.getElementById('f-artwork-due').value=ev.artworkDue||'';
   formFins=new Set(ev.fins||[]);
   document.querySelectorAll('#f-fin-multi .fin-opt').forEach(b=>{
     b.classList.toggle('sel',(ev.fins||[]).includes(b.dataset.val));
