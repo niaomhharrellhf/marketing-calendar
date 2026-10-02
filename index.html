@@ -660,11 +660,11 @@ textarea.ef-input{resize:vertical;min-height:48px}
 <!-- SYNC BANNER -->
 <div id="sync-banner" style="background:#FFF9D6;border-bottom:1.5px solid #E6B800;padding:6px 28px;display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:11px;color:#7A6500;flex-shrink:0">
   <span>⏱</span>
-  <span>Changes may take up to <strong>30 seconds</strong> to appear for other users — the calendar syncs automatically.</span>
+  <span>Changes may take up to <strong>60 seconds</strong> to appear for other users — the calendar syncs automatically.</span>
 </div>
 <!-- POST-CHANGE NOTIFICATION -->
 <div id="change-notif" style="display:none;position:fixed;top:16px;right:16px;background:#04502E;color:#A9CF38;font-family:var(--mono);font-size:11px;font-weight:700;padding:9px 16px;border-radius:8px;z-index:3000;box-shadow:0 4px 16px rgba(0,0,0,.2)">
-  ✓ Saved — visible to others within 30s
+  ✓ Saved — visible to others within 60s
 </div>
 
 <!-- FILTERS -->
@@ -1514,8 +1514,8 @@ function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(
 // ══════════════════════════════════════════════
 // DATE UTILS
 // ══════════════════════════════════════════════
-function ds(d){ return d.toISOString().split('T')[0]; }
-function pd(s){ const[y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); }
+function ds(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function pd(s){ const[y,m,d]=String(s).slice(0,10).split('-').map(Number); return new Date(y,m-1,d); }
 function addD(d,n){ const r=new Date(d); r.setDate(r.getDate()+n); return r; }
 function sameDay(a,b){ return ds(a)===ds(b); }
 function fmtFull(s){ if(!s) return '—'; try{return pd(s).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});}catch(e){return s;} }
