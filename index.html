@@ -104,6 +104,12 @@ h1 .yr{color:var(--lime)}
 .btn-cancel-f:hover{background:rgba(255,255,255,.08)}
 .form-err{font-family:var(--mono);font-size:11px;color:#F5A79E}
 
+/* ── GLOBAL CREATIVE RESOURCE YES/NO ───── */
+.cr-btn{background:rgba(128,128,128,.12);border:1.5px solid rgba(128,128,128,.45);border-radius:999px;padding:5px 20px;font-size:12.5px;font-weight:800;cursor:pointer;color:var(--cr-fg,#C9D9C5);font-family:inherit;transition:all .12s}
+.cr-btn:hover{border-color:var(--lime)}
+.cr-btn.sel-yes{background:#067A46;border-color:#067A46;color:#fff}
+.cr-btn.sel-no{background:#6B7B70;border-color:#6B7B70;color:#fff}
+
 /* ── FILTER BAR ──────────────────────────── */
 .filter-wrap{background:var(--card);border-bottom:1px solid var(--line);padding:8px 28px;flex-shrink:0;display:flex;flex-direction:column;gap:5px}
 .filter-row{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
@@ -489,6 +495,7 @@ textarea.ef-input{resize:vertical;min-height:48px}
       <button class="mtab on" id="tab-campaign" onclick="setMode('campaign')">Campaign</button>
       <button class="mtab" id="tab-group" onclick="setMode('group')">Category</button>
       <button class="mtab" id="tab-briefs" onclick="setMode('briefs')">📋 Briefs</button>
+      <button class="mtab" id="tab-clusters" onclick="setMode('clusters')">🎨 Creative Project Clusters</button>
     </div>
     <div class="ctrl-section">
       <span class="ctrl-label">Zoom</span>
@@ -539,12 +546,12 @@ textarea.ef-input{resize:vertical;min-height:48px}
       </div>
       <div class="fg">
         <label>Channel</label>
-        <select id="f-channel"><option value="">All / N/A</option></select>
+        <select id="f-channel" onchange="updateCreativeUI('f')"><option value="">All / N/A</option></select>
       </div>
       <div class="fg">
         <label>Start Date *</label>
         <div class="date-wrap">
-          <input type="date" id="f-start">
+          <input type="date" id="f-start" onchange="onStartChange('f')">
           <span class="date-icon">📅</span>
         </div>
       </div>
@@ -631,21 +638,43 @@ textarea.ef-input{resize:vertical;min-height:48px}
         </div>
       </div>
     </div>
-    <!-- Brief dates panel -->
+    <!-- Global Creative Resource + brief dates panel -->
     <div style="margin-top:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:14px">
-      <div style="font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:800;margin-bottom:10px;display:flex;align-items:center;gap:7px;color:#9FBBA0">📋 Brief Milestones <span style="font-weight:400;font-size:9px;opacity:.6">(optional)</span></div>
-      <div class="fg-row c3">
-        <div class="fg">
-          <label>🟣 Brief Due</label>
-          <div class="date-wrap"><input type="date" id="f-brief-due"><span class="date-icon">📅</span></div>
+      <div style="font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:800;margin-bottom:10px;color:#9FBBA0">📋 Global Creative Resource &amp; Brief Milestones</div>
+      <div id="f-cr-question">
+        <div style="font-size:12.5px;font-weight:700;color:#EAF2E6;margin-bottom:7px">Is Global Creative Resource required for this activity? <span style="color:#F5A79E">*</span></div>
+        <div style="display:flex;gap:8px">
+          <button type="button" class="cr-btn" id="f-cr-btn-yes" onclick="setCreative('f','yes')">Yes</button>
+          <button type="button" class="cr-btn" id="f-cr-btn-no" onclick="setCreative('f','no')">No</button>
         </div>
-        <div class="fg">
-          <label>🟠 Feedback Due</label>
-          <div class="date-wrap"><input type="date" id="f-feedback-due"><span class="date-icon">📅</span></div>
+      </div>
+      <p id="f-cr-msg-ex" style="display:none;font-family:var(--mono);font-size:10.5px;color:#9FBBA0;line-height:1.5">ℹ️ Briefing isn't required for this channel (Radio, PR and Pricing &amp; Discounts are excluded), so this activity won't appear in the Briefs tab.</p>
+      <p id="f-cr-msg-no" style="display:none;font-family:var(--mono);font-size:10.5px;color:#9FBBA0;line-height:1.5;margin-top:8px">This activity won't be added to the Briefs tab.</p>
+      <div id="f-cr-fields" style="display:none;margin-top:12px">
+        <div class="fg-row c2" style="align-items:end">
+          <div class="fg">
+            <label>🎨 Creative Project Cluster *</label>
+            <select id="f-cluster" onchange="onClusterChange('f')"></select>
+          </div>
+          <div class="fg">
+            <label>&nbsp;</label>
+            <button type="button" class="btn-cancel-f" onclick="applySuggestions('f',true)" style="padding:7px 12px">✨ Re-apply cluster dates</button>
+          </div>
         </div>
-        <div class="fg">
-          <label>🟢 Artwork Delivery</label>
-          <div class="date-wrap"><input type="date" id="f-artwork-due"><span class="date-icon">📅</span></div>
+        <p id="f-cluster-hint" style="font-family:var(--mono);font-size:9.5px;color:#9FBBA0;margin:-2px 0 10px"></p>
+        <div class="fg-row c3">
+          <div class="fg">
+            <label>🟣 Brief Due *</label>
+            <div class="date-wrap"><input type="date" id="f-brief-due"><span class="date-icon">📅</span></div>
+          </div>
+          <div class="fg">
+            <label>🟠 Feedback Due *</label>
+            <div class="date-wrap"><input type="date" id="f-feedback-due"><span class="date-icon">📅</span></div>
+          </div>
+          <div class="fg">
+            <label>🟢 Artwork Delivery *</label>
+            <div class="date-wrap"><input type="date" id="f-artwork-due"><span class="date-icon">📅</span></div>
+          </div>
         </div>
       </div>
     </div>
@@ -757,7 +786,7 @@ textarea.ef-input{resize:vertical;min-height:48px}
       <div class="wiz-row c3">
         <div class="wiz-fg">
           <label class="wiz-label">Campaign Tag *</label>
-          <select class="wiz-input" id="wiz-tag">
+          <select class="wiz-input" id="wiz-tag" onchange="wizTagChange()">
             <option value="">Select tag…</option>
           </select>
           <input type="text" id="wiz-tag-new" placeholder="Or type new tag + Enter"
@@ -791,6 +820,20 @@ textarea.ef-input{resize:vertical;min-height:48px}
         </div>
       </div>
       <div class="wiz-fg">
+        <label class="wiz-label">Is Global Creative Resource required for this campaign? *</label>
+        <div style="display:flex;gap:8px;margin-top:2px">
+          <button type="button" class="cr-btn" id="wiz-cr-btn-yes" onclick="wizSetCreative('yes')">Yes</button>
+          <button type="button" class="cr-btn" id="wiz-cr-btn-no" onclick="wizSetCreative('no')">No</button>
+        </div>
+        <p id="wiz-cr-msg-no" style="display:none;font-family:var(--mono);font-size:10.5px;color:#8FAC8E;margin-top:7px">These activities won't be added to the Briefs tab.</p>
+        <p style="font-family:var(--mono);font-size:10px;color:#8FAC8E;margin-top:7px">Radio, PR and Pricing &amp; Discounts activities are always excluded from briefing.</p>
+      </div>
+      <div class="wiz-fg" id="wiz-cr-fields" style="display:none">
+        <label class="wiz-label">🎨 Creative Project Cluster *</label>
+        <select class="wiz-input" id="wiz-cluster"></select>
+        <p style="font-family:var(--mono);font-size:10px;color:#8FAC8E;margin-top:5px">Brief Due, Feedback Due and Artwork Delivery dates are assigned automatically for every briefed activity (artwork 1 week before each activity's start date). You can fine-tune them in step 3.</p>
+      </div>
+      <div class="wiz-fg">
         <label class="wiz-label">Campaign Notes</label>
         <textarea class="wiz-input" id="wiz-notes" rows="2" placeholder="Any campaign-level notes that apply to all activities…"></textarea>
       </div>
@@ -820,6 +863,9 @@ textarea.ef-input{resize:vertical;min-height:48px}
             <th>Channel</th>
             <th>Start</th>
             <th>End</th>
+            <th>🟣 Brief Due</th>
+            <th>🟠 Feedback Due</th>
+            <th>🟢 Artwork</th>
             <th></th>
           </tr>
         </thead>
@@ -909,7 +955,7 @@ textarea.ef-input{resize:vertical;min-height:48px}
       <h3>Campaign Tags</h3>
       <div class="sp-list" id="sp-tags-list"></div>
       <div class="sp-add-row">
-        <input type="text" id="sp-tag-input" placeholder="e.g. Peak 2027, Valentine's…" onkeydown="if(event.key==='Enter')addSettingItem('tags')">
+        <input type="text" id="sp-tag-input" placeholder="e.g. Peak 2026, Valentine's…" onkeydown="if(event.key==='Enter')addSettingItem('tags')">
         <button class="btn-sp-add" onclick="addSettingItem('tags')">Add</button>
       </div>
       <p class="sp-hint">Tags appear as a restricted dropdown when adding activities.</p>
@@ -976,14 +1022,14 @@ textarea.ef-input{resize:vertical;min-height:48px}
         </div>
         <div class="ef-row">
           <div class="ef-label">Channel</div>
-          <select class="ef-input" id="ef-channel"></select>
+          <select class="ef-input" id="ef-channel" onchange="updateCreativeUI('ef')"></select>
         </div>
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div class="ef-row">
           <div class="ef-label">Start Date</div>
-          <div class="date-wrap"><input class="ef-input" id="ef-start" type="date"><span class="date-icon">📅</span></div>
+          <div class="date-wrap"><input class="ef-input" id="ef-start" type="date" onchange="onStartChange('ef')"><span class="date-icon">📅</span></div>
         </div>
         <div class="ef-row">
           <div class="ef-label">End Date</div>
@@ -1023,21 +1069,40 @@ textarea.ef-input{resize:vertical;min-height:48px}
         <textarea class="ef-input" id="ef-notes" rows="2"></textarea>
       </div>
 
-      <!-- Brief milestones -->
-      <div style="background:var(--paper);border-radius:8px;padding:10px 12px;border:1px solid var(--line)">
-        <div style="font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);font-weight:700;margin-bottom:8px">📋 Brief Milestones</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
-          <div class="ef-row">
-            <div class="ef-label" style="color:#7B5EA7">🟣 Brief Due</div>
-            <div class="date-wrap"><input class="ef-input" id="ef-brief-due" type="date"><span class="date-icon">📅</span></div>
+      <!-- Global Creative Resource + brief milestones -->
+      <div style="background:var(--paper);border-radius:8px;padding:10px 12px;border:1px solid var(--line);--cr-fg:var(--ink)">
+        <div style="font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);font-weight:700;margin-bottom:8px">📋 Global Creative Resource &amp; Brief Milestones</div>
+        <div id="ef-cr-question">
+          <div class="ef-label" style="margin-bottom:5px">Is Global Creative Resource required?</div>
+          <div style="display:flex;gap:8px">
+            <button type="button" class="cr-btn" id="ef-cr-btn-yes" onclick="setCreative('ef','yes')">Yes</button>
+            <button type="button" class="cr-btn" id="ef-cr-btn-no" onclick="setCreative('ef','no')">No</button>
           </div>
-          <div class="ef-row">
-            <div class="ef-label" style="color:#DF9A2E">🟠 Feedback Due</div>
-            <div class="date-wrap"><input class="ef-input" id="ef-feedback-due" type="date"><span class="date-icon">📅</span></div>
+        </div>
+        <p id="ef-cr-msg-ex" style="display:none;font-family:var(--mono);font-size:10px;color:var(--ink-soft);line-height:1.5">ℹ️ Briefing isn't required for this channel (Radio, PR and Pricing &amp; Discounts are excluded).</p>
+        <p id="ef-cr-msg-no" style="display:none;font-family:var(--mono);font-size:10px;color:var(--ink-soft);line-height:1.5;margin-top:6px">This activity won't appear in the Briefs tab.</p>
+        <div id="ef-cr-fields" style="display:none;margin-top:10px">
+          <div style="display:flex;gap:8px;align-items:flex-end;margin-bottom:6px">
+            <div class="ef-row" style="flex:1">
+              <div class="ef-label">🎨 Creative Project Cluster *</div>
+              <select class="ef-input" id="ef-cluster" onchange="onClusterChange('ef')"></select>
+            </div>
+            <button type="button" onclick="applySuggestions('ef',true)" style="background:var(--lime-soft);border:1.5px solid rgba(169,207,56,.5);border-radius:7px;padding:7px 11px;font-size:11.5px;font-weight:700;color:var(--green-deep);white-space:nowrap">✨ Re-apply dates</button>
           </div>
-          <div class="ef-row">
-            <div class="ef-label" style="color:#067A46">🟢 Artwork Delivery</div>
-            <div class="date-wrap"><input class="ef-input" id="ef-artwork-due" type="date"><span class="date-icon">📅</span></div>
+          <p id="ef-cluster-hint" style="font-family:var(--mono);font-size:9.5px;color:var(--ink-soft);margin-bottom:8px"></p>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+            <div class="ef-row">
+              <div class="ef-label" style="color:#7B5EA7">🟣 Brief Due *</div>
+              <div class="date-wrap"><input class="ef-input" id="ef-brief-due" type="date"><span class="date-icon">📅</span></div>
+            </div>
+            <div class="ef-row">
+              <div class="ef-label" style="color:#DF9A2E">🟠 Feedback Due *</div>
+              <div class="date-wrap"><input class="ef-input" id="ef-feedback-due" type="date"><span class="date-icon">📅</span></div>
+            </div>
+            <div class="ef-row">
+              <div class="ef-label" style="color:#067A46">🟢 Artwork Delivery *</div>
+              <div class="date-wrap"><input class="ef-input" id="ef-artwork-due" type="date"><span class="date-icon">📅</span></div>
+            </div>
           </div>
         </div>
       </div>
@@ -1131,7 +1196,7 @@ let formFins   = new Set();
 // GOOGLE SHEETS CONFIG
 // ══════════════════════════════════════════════
 // ⚠️ PASTE YOUR APPS SCRIPT URL HERE after deploying (Step 4 of setup guide)
-const GS_URL = 'https://script.google.com/macros/s/AKfycbxXsiJ4DIXN0ijwfR-lI0Q5gJOh-5j7S1I86kzyyAdxu9feDh8j0t9GMNaR3UedNPJeXA/exec';
+const GS_URL = 'https://script.google.com/macros/s/AKfycbz47CxrmX4bwL1d0Zv8mOG0CQhnlACFr7HgDUZ6GXUV7HYsWjOcJCcbV20lsauJFnu1LA/exec';
 
 // ── Setup check ───────────────────────────────
 if(GS_URL === 'YOUR_APPS_SCRIPT_URL_HERE'){
@@ -1189,6 +1254,11 @@ function gsRecordToEvent(rec){
     briefDue: rec['Brief Due']||'',
     feedbackDue: rec['Feedback Due']||'',
     artworkDue: rec['Artwork Due']||'',
+    cluster: rec['Creative Cluster']||'',
+    creativeRequired: (()=>{ const v=String(rec['Creative Required']||'').toLowerCase();
+      if(v==='yes'||v==='true') return 'yes';
+      if(v==='no'||v==='false') return 'no';
+      return (rec['Creative Cluster']||rec['Brief Due']||rec['Feedback Due']||rec['Artwork Due'])?'yes':''; })(),
   };
 }
 
@@ -1213,6 +1283,8 @@ function eventToGsRecord(ev){
     'Brief Due': ev.briefDue||'',
     'Feedback Due': ev.feedbackDue||'',
     'Artwork Due': ev.artworkDue||'',
+    'Creative Cluster': ev.cluster||'',
+    'Creative Required': ev.creativeRequired==='yes'?'Yes':(ev.creativeRequired==='no'?'No':''),
   };
 }
 
@@ -1647,6 +1719,7 @@ function scrollToToday(cols, cw){
 // ══════════════════════════════════════════════
 function render(){
   const body=document.getElementById('gantt-body');
+  if(mode==='clusters'){ body.innerHTML=renderClustersReference(); return; }
   const cols=getCols();
   const cw=colWidth();
   const evs=visibleEvents();
@@ -2035,6 +2108,150 @@ function renderCampaignMode(evs,cols,cw,LW,twidth){
   return html;
 }
 
+// ══════════════════════════════════════════════
+// CREATIVE PROJECT CLUSTERS
+// ══════════════════════════════════════════════
+// To change the default brief lead time, edit the "weeks" number for a cluster.
+// Currently set to the LONGEST end of each range (safest).
+const ARTWORK_BUFFER_DAYS = 7; // artwork delivered 1 calendar week before activity start
+const CLUSTERS = {
+  peak:{name:'Peak Campaign',lead:'14+ Weeks',weeks:14,concepting:'High concepting',
+    deliverables:['High amount of assets across visual, channels'],c1:'#F0C230',tc:'#15251B',rowBg:'#FDD966'},
+  a:{name:'Cluster A',lead:'14 + Weeks',weeks:14,concepting:'High concepting',
+    deliverables:['High amount of assets across visual, channels'],c1:'#0B6B45',tc:'#fff',rowBg:'#fff'},
+  b:{name:'Cluster B',lead:'7 - 12 Weeks',weeks:12,concepting:'New concept',
+    deliverables:['Multi-channel deliverables and localization. Capsules','Local market initiatives - collaboration between local copywriters and global creative team'],c1:'#089E4A',tc:'#fff',rowBg:'#fff'},
+  c:{name:'Cluster C',lead:'3 - 5 Weeks',weeks:5,concepting:'Possible light concepting - BAU',
+    deliverables:['Channel specific','<em>e.g. organic social, CRM design assets, display banners</em>'],c1:'#6AA84F',tc:'#fff',rowBg:'#fff'},
+  d:{name:'Cluster D',lead:'Less than 2 weeks',weeks:2,concepting:'None -<br>BAU Updates &amp; Fixes',
+    deliverables:['Quick fixes, one channel, one market'],c1:'#93C47D',tc:'#fff',rowBg:'#fff'},
+};
+
+// Channels that never go through the creative briefing process
+const BRIEF_EXCLUDED_CHANNELS=['Radio','Pricing & Discounts','PR'];
+function isBriefExcluded(ch){ return BRIEF_EXCLUDED_CHANNELS.includes(ch); }
+
+let creativeState={f:'',ef:''}; // '' | 'yes' | 'no' for the add form / edit modal
+
+function setCreative(prefix,val){
+  creativeState[prefix]=val;
+  updateCreativeUI(prefix);
+  if(val==='yes'){
+    const tags=prefix==='f'?formTags:editTags;
+    const c=document.getElementById(prefix+'-cluster');
+    if(!c.value&&tags.some(t=>/peak/i.test(t))) c.value='peak';
+    if(c.value) applySuggestions(prefix,false);
+  }
+}
+function updateCreativeUI(prefix){
+  const ch=document.getElementById(prefix+'-channel').value;
+  const excluded=isBriefExcluded(ch);
+  const st=excluded?'':creativeState[prefix];
+  const set=(id,disp)=>{ const el=document.getElementById(prefix+'-'+id); if(el) el.style.display=disp; };
+  set('cr-question',excluded?'none':'');
+  set('cr-msg-ex',excluded?'block':'none');
+  set('cr-msg-no',st==='no'?'block':'none');
+  set('cr-fields',st==='yes'?'block':'none');
+  document.getElementById(prefix+'-cr-btn-yes').className='cr-btn'+(st==='yes'?' sel-yes':'');
+  document.getElementById(prefix+'-cr-btn-no').className='cr-btn'+(st==='no'?' sel-no':'');
+}
+function updateWizCreativeUI(){
+  document.getElementById('wiz-cr-btn-yes').className='cr-btn'+(wizCreative==='yes'?' sel-yes':'');
+  document.getElementById('wiz-cr-btn-no').className='cr-btn'+(wizCreative==='no'?' sel-no':'');
+  document.getElementById('wiz-cr-fields').style.display=wizCreative==='yes'?'':'none';
+  document.getElementById('wiz-cr-msg-no').style.display=wizCreative==='no'?'':'none';
+}
+function wizSetCreative(v){ wizCreative=v; updateWizCreativeUI(); if(v==='yes') wizTagChange(); }
+
+function suggestDates(startStr,key){
+  const cl=CLUSTERS[key]; if(!cl||!startStr) return null;
+  const start=pd(startStr);
+  const artwork=addD(start,-ARTWORK_BUFFER_DAYS);
+  const brief=addD(start,-cl.weeks*7);
+  const half=Math.round((artwork-brief)/86400000/2);
+  const feedback=addD(brief,half);
+  return {briefDue:ds(brief),feedbackDue:ds(feedback),artworkDue:ds(artwork)};
+}
+
+// Fills Brief / Feedback / Artwork dates for the add form (prefix 'f') or edit modal (prefix 'ef').
+// Only fills empty fields or ones previously auto-filled, unless force=true.
+function applySuggestions(prefix,force,noConfirm){
+  const key=document.getElementById(prefix+'-cluster').value;
+  const start=document.getElementById(prefix+'-start').value;
+  const hint=document.getElementById(prefix+'-cluster-hint');
+  if(!key||!start){ if(force&&hint) hint.textContent='⚠ Choose a cluster and a start date first'; return; }
+  const sg=suggestDates(start,key); if(!sg) return;
+  const fields=[['brief-due','briefDue'],['feedback-due','feedbackDue'],['artwork-due','artworkDue']];
+  const hasManual=fields.some(([id])=>{ const el=document.getElementById(prefix+'-'+id); return el.value&&el.dataset.auto!=='1'; });
+  if(force&&hasManual&&!noConfirm&&!confirm('Replace the dates already entered with the suggested ones?')) return;
+  fields.forEach(([id,k])=>{
+    const el=document.getElementById(prefix+'-'+id);
+    if(force||!el.value||el.dataset.auto==='1'){ el.value=sg[k]; el.dataset.auto='1'; }
+  });
+  const cl=CLUSTERS[key];
+  if(hint) hint.textContent=`✓ Suggested from ${cl.name}: brief ${cl.weeks} weeks before start, artwork ${ARTWORK_BUFFER_DAYS/7} week before start. You can edit any date.`;
+}
+function onClusterChange(prefix){
+  if(!document.getElementById(prefix+'-cluster').value){ document.getElementById(prefix+'-cluster-hint').textContent=''; return; }
+  applySuggestions(prefix,true,true); // picking a cluster assigns all three deadlines
+}
+function onStartChange(prefix){ if(document.getElementById(prefix+'-cluster').value) applySuggestions(prefix,false); }
+
+// Peak tags (Q1 Peak / Q3 Peak) pre-select the Peak Campaign cluster
+function autoPeakCluster(){
+  const v=document.getElementById('f-tag-select').value;
+  const c=document.getElementById('f-cluster');
+  if(v&&/peak/i.test(v)&&!c.value&&creativeState.f==='yes'){ c.value='peak'; onClusterChange('f'); }
+}
+function wizTagChange(){
+  const v=document.getElementById('wiz-tag').value;
+  const c=document.getElementById('wiz-cluster');
+  if(v&&/peak/i.test(v)&&!c.value) c.value='peak';
+}
+
+function populateClusterSelects(){
+  ['f-cluster','ef-cluster','wiz-cluster'].forEach(id=>{
+    const el=document.getElementById(id); if(!el) return;
+    el.innerHTML='<option value="">Select cluster…</option>'+Object.entries(CLUSTERS).map(([k,c])=>`<option value="${k}">${c.name} — ${c.lead}</option>`).join('');
+  });
+}
+
+function renderClustersReference(){
+  const th='padding:12px 14px;text-align:left;font-weight:800;color:#fff;font-size:13px;border:1px solid rgba(255,255,255,.35)';
+  const rows=Object.values(CLUSTERS).map(c=>{
+    const td=`padding:14px;vertical-align:top;font-size:13px;color:var(--ink);background:${c.rowBg};border:1px solid var(--line)`;
+    return `<tr>
+      <td style="${td};background:${c.c1};color:${c.tc};font-weight:800;width:170px">${c.name}</td>
+      <td style="${td};width:150px">${c.lead}</td>
+      <td style="${td};width:210px">${c.concepting}</td>
+      <td style="${td}">${c.deliverables.map((d,i)=>`<p style="margin:${i?'10px':'0'} 0 0">${d}</p>`).join('')}</td>
+      <td style="${td};width:190px;font-family:var(--mono);font-size:11.5px">Brief due ${c.weeks} wks before start</td>
+    </tr>`;
+  }).join('');
+  return `<div style="padding:24px 28px;max-width:1150px">
+    <h2 style="font-variation-settings:'wdth' 112;font-weight:800;font-size:19px;margin-bottom:4px">🎨 Creative Project Clusters</h2>
+    <p style="font-size:13px;color:var(--ink-soft);margin-bottom:16px">Reference guide for the creative team's process and briefing deadlines. Choose a cluster when adding an activity and the Briefs tab dates are suggested for you.</p>
+    <table style="border-collapse:collapse;width:100%;table-layout:auto">
+      <thead><tr>
+        <th style="${th};background:#087443">Creative Project Cluster</th>
+        <th style="${th};background:#087443">End-to-End Lead Time</th>
+        <th style="${th};background:#087443">Concepting</th>
+        <th style="${th};background:#087443">Project Deliverables</th>
+        <th style="${th};background:#04502E">Calendar default</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div style="margin-top:18px;background:var(--lime-soft);border:1px solid rgba(169,207,56,.5);border-radius:10px;padding:14px 18px;font-size:12.5px;color:var(--green-deep);line-height:1.7;max-width:760px">
+      <strong>How the suggested dates are calculated</strong><br>
+      🟢 <strong>Artwork Delivery</strong> = 1 calendar week before the activity start date<br>
+      🟣 <strong>Brief Due</strong> = activity start date minus the cluster lead time (longest end of each range)<br>
+      🟠 <strong>Feedback Due</strong> = halfway between Brief Due and Artwork Delivery<br>
+      📋 <strong>Who gets briefed?</strong> Only activities where Global Creative Resource is required (Yes). Radio, PR and Pricing &amp; Discounts channels are always excluded.<br>
+      <span style="color:var(--ink-soft)">Picking a cluster assigns all three dates automatically, and you can then edit any of them. Changing the start date re-calculates any dates you haven't edited by hand. Activities tagged Q1 Peak or Q3 Peak pre-select Peak Campaign.</span>
+    </div>
+  </div>`;
+}
+
 // ── BRIEFS MODE ───────────────────────────────
 function briefMilestoneFlagRow(ev, cols, cw, LW, twidth) {
   const g = GROUPS[ev.group] || GROUPS['brand'];
@@ -2083,6 +2300,7 @@ function briefMilestoneFlagRow(ev, cols, cw, LW, twidth) {
 }
 
 function renderBriefsMode(evs, cols, cw, LW, twidth) {
+  evs = evs.filter(e => e.creativeRequired === 'yes' && !isBriefExcluded(e.channel));
   // Group by category like group mode
   let html = '';
   // Header legend
@@ -2094,7 +2312,7 @@ function renderBriefsMode(evs, cols, cw, LW, twidth) {
       <span style="font-family:var(--mono);font-size:9px;font-weight:700;color:#7B5EA7">🟣 Brief Due</span>
       <span style="font-family:var(--mono);font-size:9px;font-weight:700;color:#DF9A2E">🟠 Feedback Due</span>
       <span style="font-family:var(--mono);font-size:9px;font-weight:700;color:#067A46">🟢 Artwork Delivery</span>
-      <span style="font-family:var(--mono);font-size:9px;color:var(--ink-soft);margin-left:auto">Click any activity bar to edit milestone dates</span>
+      <span style="font-family:var(--mono);font-size:9px;color:var(--ink-soft);margin-left:auto">Only activities needing Global Creative Resource appear here · click a flag to edit</span>
     </div>
   </div>`;
 
@@ -2115,8 +2333,8 @@ function renderBriefsMode(evs, cols, cw, LW, twidth) {
     }
   });
 
-  if (!html.includes('data-evid')) {
-    html += emptyDivRow(twidth, LW, 'No activities — add some using the form above');
+  if (!evs.length) {
+    html += emptyDivRow(twidth, LW, 'No activities need Global Creative Resource yet — answer Yes when adding an activity to see it here');
   }
   return html;
 }
@@ -2212,6 +2430,9 @@ function setMode(m){
   document.getElementById('tab-group').classList.toggle('on',m==='group');
   document.getElementById('tab-campaign').classList.toggle('on',m==='campaign');
   document.getElementById('tab-briefs').classList.toggle('on',m==='briefs');
+  document.getElementById('tab-clusters').classList.toggle('on',m==='clusters');
+  const gn=document.querySelector('.gantt-nav'); if(gn) gn.style.display=m==='clusters'?'none':'';
+  const fw=document.querySelector('.filter-wrap'); if(fw) fw.style.display=m==='clusters'?'none':'';
   scrollOnNextRender=true; render();
 }
 
@@ -2238,6 +2459,7 @@ function onGroupChange(){
   if(grp==='discount'||grp==='pricing') ch.value='Pricing & Discounts';
   document.getElementById('panel-discount').classList.toggle('show',grp==='discount');
   document.getElementById('panel-pricing').classList.toggle('show',grp==='pricing');
+  updateCreativeUI('f');
 }
 function togglePriceChangeFields(){
   document.getElementById('price-change-fields').classList.toggle('show',document.getElementById('f-is-price-change').checked);
@@ -2246,6 +2468,7 @@ function toggleFin(btn){ btn.classList.toggle('sel'); const v=btn.dataset.val; f
 
 // Campaign tag — restricted dropdown
 function addTagFromSelect(){
+  autoPeakCluster();
   const sel=document.getElementById('f-tag-select');
   const v=sel.value; if(!v) return;
   if(!formTags.includes(v)){ formTags.push(v); renderFormTags(); }
@@ -2289,10 +2512,16 @@ function submitEvent(){
   if(start>end){ err.textContent='⚠ End must be on or after Start'; return; }
   if(isPriceChange&&!priceChangeDate){ err.textContent='⚠ Please enter the price change date'; return; }
   err.textContent='';
-  const briefDue=document.getElementById('f-brief-due').value;
-  const feedbackDue=document.getElementById('f-feedback-due').value;
-  const artworkDue=document.getElementById('f-artwork-due').value;
-  const ev={id:uid(),name,group,channel,start,end,fins:[...formFins],tags:[...formTags],owner,notes,discountNotes,pricingNotes,isPriceChange,priceChangeDate,priceChangeDesc,isTest,briefDue,feedbackDue,artworkDue};
+  const excludedCh=isBriefExcluded(channel);
+  const crAns=excludedCh?'':creativeState.f;
+  if(!excludedCh&&!crAns){ err.textContent='⚠ Please answer: is Global Creative Resource required?'; return; }
+  const crOn=crAns==='yes';
+  const clusterVal=crOn?document.getElementById('f-cluster').value:'';
+  const briefDue=crOn?document.getElementById('f-brief-due').value:'';
+  const feedbackDue=crOn?document.getElementById('f-feedback-due').value:'';
+  const artworkDue=crOn?document.getElementById('f-artwork-due').value:'';
+  if(crOn&&(!clusterVal||!briefDue||!feedbackDue||!artworkDue)){ err.textContent='⚠ Select a Creative Project Cluster and complete the Brief Due, Feedback Due and Artwork Delivery dates'; return; }
+  const ev={id:uid(),name,group,channel,start,end,fins:[...formFins],tags:[...formTags],owner,notes,discountNotes,pricingNotes,isPriceChange,priceChangeDate,priceChangeDesc,isTest,briefDue,feedbackDue,artworkDue,cluster:clusterVal,creativeRequired:crAns};
   events.push(ev);
   setUndo({type:'add',id:ev.id});
   saveEv_at(ev, null).catch(e=>showAtError('Save failed: '+e.message));
@@ -2303,6 +2532,10 @@ function submitEvent(){
 function resetForm(){
   ['f-name','f-notes','f-discount-notes','f-pricing-notes','f-price-change-date','f-price-change-desc','f-tag-new-inline','f-brief-due','f-feedback-due','f-artwork-due'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
   document.getElementById('f-group').selectedIndex=0;
+  document.getElementById('f-cluster').value='';
+  document.getElementById('f-cluster-hint').textContent='';
+  creativeState.f=''; updateCreativeUI('f');
+  ['f-brief-due','f-feedback-due','f-artwork-due'].forEach(i=>{ document.getElementById(i).dataset.auto=''; });
   document.getElementById('f-channel').innerHTML='<option value="">All / N/A</option>';
   document.getElementById('f-owner').value='';
   document.getElementById('f-tag-select').value='';
@@ -2461,6 +2694,9 @@ function showPopup(id){
   document.getElementById('ef-brief-due').value=ev.briefDue||'';
   document.getElementById('ef-feedback-due').value=ev.feedbackDue||'';
   document.getElementById('ef-artwork-due').value=ev.artworkDue||'';
+  document.getElementById('ef-cluster').value=ev.cluster||'';
+  document.getElementById('ef-cluster-hint').textContent='';
+  ['ef-brief-due','ef-feedback-due','ef-artwork-due'].forEach(i=>{ document.getElementById(i).dataset.auto=''; });
 
   // Fin opts
   document.querySelectorAll('#ef-fin-multi .fin-opt').forEach(b=>{
@@ -2468,6 +2704,7 @@ function showPopup(id){
   });
 
   // Channel dropdown
+  creativeState.ef=ev.creativeRequired||'';
   editGroupChange(ev.channel);
 
   // Owner dropdown — if saved owner no longer in settings list, show it with a warning
@@ -2501,6 +2738,7 @@ function editGroupChange(currentChannel){
   else if(grp==='discount'||grp==='pricing') ch.value='Pricing & Discounts';
   document.getElementById('ef-panel-discount').style.display=grp==='discount'?'block':'none';
   document.getElementById('ef-panel-pricing').style.display=grp==='pricing'?'block':'none';
+  updateCreativeUI('ef');
 }
 
 function toggleEditFin(btn){
@@ -2516,6 +2754,11 @@ function saveEdit(){
   const end=document.getElementById('ef-end').value;
   if(!name||!start||!end){ alert('Name, Start and End are required'); return; }
   if(start>end){ alert('End must be on or after Start'); return; }
+  const crExcluded=isBriefExcluded(document.getElementById('ef-channel').value);
+  const crOn=!crExcluded&&creativeState.ef==='yes';
+  if(crOn&&(!document.getElementById('ef-cluster').value||!document.getElementById('ef-brief-due').value||!document.getElementById('ef-feedback-due').value||!document.getElementById('ef-artwork-due').value)){
+    alert('Global Creative Resource is required: please select a Creative Project Cluster and complete the Brief Due, Feedback Due and Artwork Delivery dates.'); return;
+  }
   // Save undo state before mutating
   setUndo({type:'edit', ev:JSON.parse(JSON.stringify(ev))});
   ev.name=name;
@@ -2533,9 +2776,11 @@ function saveEdit(){
   ev.isTest=document.getElementById('ef-is-test').checked;
   ev.priceChangeDate=document.getElementById('ef-price-change-date').value;
   ev.priceChangeDesc=document.getElementById('ef-price-change-desc').value.trim();
-  ev.briefDue=document.getElementById('ef-brief-due').value;
-  ev.feedbackDue=document.getElementById('ef-feedback-due').value;
-  ev.artworkDue=document.getElementById('ef-artwork-due').value;
+  ev.creativeRequired=crExcluded?'':creativeState.ef;
+  ev.briefDue=crOn?document.getElementById('ef-brief-due').value:'';
+  ev.feedbackDue=crOn?document.getElementById('ef-feedback-due').value:'';
+  ev.artworkDue=crOn?document.getElementById('ef-artwork-due').value:'';
+  ev.cluster=crOn?document.getElementById('ef-cluster').value:'';
   saveEv_at(ev, ev.id).catch(e=>showAtError('Save failed: '+e.message));
   showChangeNotif("✓ Changes saved — visible to others within 60s");
   preserveScroll(); closePopup(); render();
@@ -2712,6 +2957,7 @@ function duplicateActivity(){
   onGroupChange();
   setTimeout(()=>{
     document.getElementById('f-channel').value=ev.channel||'';
+    updateCreativeUI('f');
   },0);
   document.getElementById('f-start').value=ev.start;
   document.getElementById('f-end').value=ev.end;
@@ -2727,6 +2973,9 @@ function duplicateActivity(){
   document.getElementById('f-brief-due').value=ev.briefDue||'';
   document.getElementById('f-feedback-due').value=ev.feedbackDue||'';
   document.getElementById('f-artwork-due').value=ev.artworkDue||'';
+  document.getElementById('f-cluster').value=ev.cluster||'';
+  creativeState.f=ev.creativeRequired||''; updateCreativeUI('f');
+  ['f-brief-due','f-feedback-due','f-artwork-due'].forEach(i=>{ document.getElementById(i).dataset.auto=''; });
   formFins=new Set(ev.fins||[]);
   document.querySelectorAll('#f-fin-multi .fin-opt').forEach(b=>{
     b.classList.toggle('sel',(ev.fins||[]).includes(b.dataset.val));
@@ -2743,6 +2992,7 @@ let wizStep = 1;
 let wizFins = new Set();
 let wizSelectedChannels = new Set(); // keys: "group|channel"
 let wizRows = []; // [{name, group, channel, start, end}]
+let wizCreative = ''; // '' | 'yes' | 'no'
 
 const ALL_WIZARD_CHANNELS = ()=>{
   const list = [];
@@ -2765,6 +3015,8 @@ function openWizard(){
   // Reset fin opts
   document.querySelectorAll('#wiz-fin-multi .fin-opt').forEach(b=>b.classList.remove('sel'));
   document.getElementById('wiz-notes').value='';
+  document.getElementById('wiz-cluster').value='';
+  wizCreative=''; updateWizCreativeUI();
   document.getElementById('wiz-start').value='';
   document.getElementById('wiz-end').value='';
   document.getElementById('wiz-tag-new').value='';
@@ -2881,8 +3133,10 @@ function wizNext(){
     const start=document.getElementById('wiz-start').value;
     const end=document.getElementById('wiz-end').value;
     const err=document.getElementById('wiz-step1-err');
-    if(!tag||!start||!end){ err.style.display='block'; return; }
+    if(!tag||!start||!end){ err.style.display='block'; err.textContent='⚠ Please fill in Tag, Start Date and End Date'; return; }
     if(start>end){ err.style.display='block'; err.textContent='⚠ End date must be on or after Start date'; return; }
+    if(!wizCreative){ err.style.display='block'; err.textContent='⚠ Please answer whether Global Creative Resource is required'; return; }
+    if(wizCreative==='yes'&&!document.getElementById('wiz-cluster').value){ err.style.display='block'; err.textContent='⚠ Please select a Creative Project Cluster'; return; }
     err.style.display='none';
     wizStep=2;
   } else if(wizStep===2){
@@ -2905,6 +3159,10 @@ function wizNext(){
   } else if(wizStep===3){
     // Read current table values back into wizRows
     readTuneTable();
+    if(wizCreative==='yes'){
+      const miss=wizRows.some(r=>!isBriefExcluded(r.channel)&&(!r.briefDue||!r.feedbackDue||!r.artworkDue));
+      if(miss){ alert('Please complete the Brief Due, Feedback Due and Artwork dates for every briefed activity.'); return; }
+    }
     wizStep=4;
   } else if(wizStep===4){
     // Create all activities
@@ -2912,12 +3170,18 @@ function wizNext(){
     const tag=document.getElementById('wiz-tag').value;
     const owner=document.getElementById('wiz-owner').value;
     const notes=document.getElementById('wiz-notes').value.trim();
-    const newEvs=wizRows.map(row=>({
-      id:uid(), name:row.name, group:row.group, channel:row.channel,
-      start:row.start, end:row.end,
-      fins:[...wizFins], tags:[tag], owner, notes,
-      discountNotes:'', pricingNotes:'', isPriceChange:false, priceChangeDate:'', priceChangeDesc:'', isTest:false
-    }));
+    const wizCluster=document.getElementById('wiz-cluster').value;
+    const newEvs=wizRows.map(row=>{
+      return {
+        id:uid(), name:row.name, group:row.group, channel:row.channel,
+        start:row.start, end:row.end,
+        fins:[...wizFins], tags:[tag], owner, notes,
+        discountNotes:'', pricingNotes:'', isPriceChange:false, priceChangeDate:'', priceChangeDesc:'', isTest:false,
+        cluster:(wizCreative==='yes'&&!isBriefExcluded(row.channel))?wizCluster:'',
+        creativeRequired:isBriefExcluded(row.channel)?'':wizCreative,
+        briefDue:row.briefDue||'', feedbackDue:row.feedbackDue||'', artworkDue:row.artworkDue||''
+      };
+    });
     events.push(...newEvs);
     // Write all to Airtable in parallel
     Promise.all(newEvs.map(ev=>saveEv_at(ev,null))).catch(e=>showAtError('Save failed: '+e.message));
@@ -2969,6 +3233,7 @@ function updateWizChCount(){
 // ── Step 3: Tune table ────────────────────────
 function renderWizTuneTable(){
   const tbody=document.getElementById('wiz-tune-body');
+  wizSyncDates();
   tbody.innerHTML=wizRows.map((row,i)=>{
     const g=GROUPS[row.group]||{col:'#888',label:'',bg:'#eee',text:'#333'};
     return `<tr id="wiz-row-${i}">
@@ -2977,6 +3242,9 @@ function renderWizTuneTable(){
       <td><span style="font-size:11.5px;color:#C9D9C5">${row.channel}</span></td>
       <td><input type="date" class="tune-input date-i" value="${row.start}" onchange="wizRowChange(${i},'start',this.value)"></td>
       <td><input type="date" class="tune-input date-i" value="${row.end}" onchange="wizRowChange(${i},'end',this.value)"></td>
+${(wizCreative==='yes'&&!isBriefExcluded(row.channel))?`<td><input type="date" class="tune-input date-i" value="${row.briefDue||''}" onchange="wizRowChange(${i},'briefDue',this.value)"></td>
+      <td><input type="date" class="tune-input date-i" value="${row.feedbackDue||''}" onchange="wizRowChange(${i},'feedbackDue',this.value)"></td>
+      <td><input type="date" class="tune-input date-i" value="${row.artworkDue||''}" onchange="wizRowChange(${i},'artworkDue',this.value)"></td>`:`<td colspan="3" style="font-family:var(--mono);font-size:10.5px;color:#8FAC8E">${isBriefExcluded(row.channel)?'Not briefed — channel excluded':'Not briefed'}</td>`}
       <td>
         <button class="btn-add-row" onclick="wizAddRow(${i})" title="Add another activity for this channel">+</button>
         ${wizRows.length>1?`<button class="btn-del-row" onclick="wizDelRow(${i})" title="Remove">×</button>`:''}
@@ -2985,7 +3253,21 @@ function renderWizTuneTable(){
   }).join('');
 }
 
-function wizRowChange(i,field,val){ wizRows[i][field]=val; }
+function wizSyncDates(){
+  const key=document.getElementById('wiz-cluster').value;
+  wizRows.forEach(r=>{
+    const applies=wizCreative==='yes'&&key&&!isBriefExcluded(r.channel);
+    if(!applies){ r.briefDue=''; r.feedbackDue=''; r.artworkDue=''; return; }
+    if(r._auto===false) return; // dates edited by hand are left alone
+    const sg=r.start?suggestDates(r.start,key):null;
+    r.briefDue=sg?sg.briefDue:''; r.feedbackDue=sg?sg.feedbackDue:''; r.artworkDue=sg?sg.artworkDue:'';
+  });
+}
+function wizRowChange(i,field,val){
+  wizRows[i][field]=val;
+  if(['briefDue','feedbackDue','artworkDue'].includes(field)) wizRows[i]._auto=false;
+  if(field==='start'&&wizRows[i]._auto!==false){ readTuneTable(); renderWizTuneTable(); }
+}
 
 function wizAddRow(i){
   readTuneTable();
@@ -3005,6 +3287,7 @@ function readTuneTable(){
     wizRows[i].name=inputs[0].value;
     wizRows[i].start=inputs[1].value;
     wizRows[i].end=inputs[2].value;
+    if(inputs[3]){ wizRows[i].briefDue=inputs[3].value; wizRows[i].feedbackDue=inputs[4].value; wizRows[i].artworkDue=inputs[5].value; }
   });
 }
 
@@ -3014,6 +3297,7 @@ function renderWizReview(){
   const start=document.getElementById('wiz-start').value;
   const end=document.getElementById('wiz-end').value;
   const owner=document.getElementById('wiz-owner').value;
+  const clKey=document.getElementById('wiz-cluster').value;
   // Summary box
   const cats=[...new Set(wizRows.map(r=>GROUPS[r.group]?.label.replace(/^\S+\s/,'')||r.group))];
   document.getElementById('wiz-summary').innerHTML=`
@@ -3022,6 +3306,8 @@ function renderWizReview(){
     <div><span class="wsb-n" style="font-size:14px">${tag}</span><span class="wsb-l">campaign tag</span></div>
     <div><span class="wsb-n" style="font-size:14px">${fmtFull(start)}</span><span class="wsb-l">→ ${fmtFull(end)}</span></div>
     ${owner?`<div><span class="wsb-n" style="font-size:14px">${owner}</span><span class="wsb-l">owner</span></div>`:''}
+    ${(wizCreative==='yes'&&clKey)?`<div><span class="wsb-n" style="font-size:14px">${CLUSTERS[clKey].name}</span><span class="wsb-l">creative cluster</span></div>`:''}
+    ${wizCreative==='no'?`<div><span class="wsb-n" style="font-size:14px">Not required</span><span class="wsb-l">global creative resource</span></div>`:''}
   `;
   // Review list
   document.getElementById('wiz-review-list').innerHTML=wizRows.map(row=>{
@@ -3031,6 +3317,7 @@ function renderWizReview(){
       <span class="ri-name">${row.name}</span>
       <span class="ri-cat" style="background:${g.bg};color:${g.text}">${g.label.replace(/^\S+\s/,'')}</span>
       <span class="ri-dates">${fmtFull(row.start)} → ${fmtFull(row.end)}</span>
+      ${row.briefDue?`<span class="ri-dates" style="flex-basis:100%;padding-left:12px">🟣 Brief ${fmtFull(row.briefDue)} · 🟠 Feedback ${fmtFull(row.feedbackDue)} · 🟢 Artwork ${fmtFull(row.artworkDue)}</span>`:''}
     </div>`;
   }).join('');
 }
@@ -3038,6 +3325,12 @@ function renderWizReview(){
 // ══════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════
+populateClusterSelects();
+updateCreativeUI('f'); updateCreativeUI('ef'); updateWizCreativeUI();
+['f','ef'].forEach(p=>['brief-due','feedback-due','artwork-due'].forEach(n=>{
+  const el=document.getElementById(p+'-'+n);
+  if(el) el.addEventListener('input',()=>{ el.dataset.auto=''; }); // manual edit = protect from auto-suggest
+}));
 load();
 refreshFormDropdowns();
 document.getElementById('f-start').value=ds(new Date());
